@@ -14,6 +14,14 @@ BUILDER ?= llm-simulator-builder
 # REGISTRY should be like: ghcr.io/your-org
 REGISTRY ?=
 
+# Fail fast when pushing without a registry.
+# This triggers during Makefile parsing (so it also works with `make -n`).
+ifneq ($(filter docker-push,$(MAKECMDGOALS)),)
+ifeq ($(strip $(REGISTRY)),)
+$(error REGISTRY is required. Example: make docker-push REGISTRY=ghcr.io/your-org)
+endif
+endif
+
 help:
 	@echo "Targets:"
 	@echo "  docker-push   Build & push multi-arch image (requires REGISTRY=...)"
