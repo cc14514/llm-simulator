@@ -90,7 +90,9 @@ def generate_response_text(messages: List[Message], model: str) -> str:
     This is a minimal simulator, so we just echo back information about the request.
     """
     last_message = messages[-1].content if messages else "No message"
-    response = f"[Simulator Response] Model: {model}, Message received: '{last_message[:50]}...'"
+    truncated_message = last_message[:50]
+    ellipsis = "..." if len(last_message) > 50 else ""
+    response = f"[Simulator Response] Model: {model}, Message received: '{truncated_message}{ellipsis}'"
     return response
 
 

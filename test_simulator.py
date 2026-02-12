@@ -145,7 +145,8 @@ def test_invalid_model(base_url):
 
 def main():
     """Run all tests"""
-    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+    import os
+    base_url = sys.argv[1] if len(sys.argv) > 1 else os.getenv('SIMULATOR_URL', 'http://localhost:8000')
     
     print(f"Testing LLM Behavior Simulator at {base_url}")
     print("=" * 60)
