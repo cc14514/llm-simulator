@@ -57,6 +57,19 @@ docker run -p 8000:8000 llm-simulator
 
 ## Usage
 
+### Quick Start
+
+The easiest way to get started:
+
+```bash
+./start.sh
+```
+
+This script will:
+- Create a virtual environment
+- Install dependencies
+- Start the simulator on localhost:8000
+
 ### Starting the Server
 
 Run the simulator with default settings (localhost:8000):
