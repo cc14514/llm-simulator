@@ -1,17 +1,26 @@
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
 # IDE
 .vscode/
 .idea/
-
-# Go
-/llm-simulator
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-vendor/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store

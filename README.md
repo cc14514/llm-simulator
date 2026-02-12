@@ -1,105 +1,250 @@
-# llm-simulator
+# LLM Behavior Simulator
 
-A minimal LLM behavior simulator for validating AI gateway functionality. It exposes OpenAI-compatible API endpoints that return deterministic, configurable responses — useful for testing AI gateways, proxies, and integrations without calling real LLM providers.
+A minimal LLM behavior simulator for validating AI gateway functionality.
+
+## Overview
+
+This simulator provides an OpenAI-compatible API server that mimics the behavior of LLM endpoints. It's designed for testing and validating AI gateway functionality, including:
+
+- Request routing and proxying
+- Authentication and authorization flows
+- Rate limiting and throttling
+- Load balancing
+- Request/response transformation
+- Monitoring and observability
 
 ## Features
 
-- **OpenAI-compatible API** — `/v1/chat/completions` and `/v1/models` endpoints
-- **Streaming support** — Server-Sent Events (SSE) streaming responses
-- **Echo mode** — Echoes back the last user message for request validation
-- **Configurable latency** — Simulate response delays and per-chunk streaming delays
-- **Error injection** — Configurable error rate and status codes for resilience testing
-- **Token estimation** — Approximate token counts in responses
+- ✅ OpenAI-compatible `/v1/chat/completions` endpoint
+- ✅ Support for both streaming and non-streaming responses
+- ✅ Model listing via `/v1/models` endpoint
+- ✅ Health check endpoint
+- ✅ Simple token usage estimation
+- ✅ Lightweight and easy to deploy
+- ✅ No external dependencies on actual LLM providers
 
-## Quick Start
+## Installation
 
+### Requirements
+
+- Python 3.8 or higher
+
+### Setup
+
+1. Clone the repository:
 ```bash
-go build -o llm-simulator .
-./llm-simulator
+git clone https://github.com/cc14514/llm-simulator.git
+cd llm-simulator
 ```
 
-The server starts on port `8080` by default.
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### Docker Deployment
+
+You can also run the simulator using Docker:
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build and run manually
+docker build -t llm-simulator .
+docker run -p 8000:8000 llm-simulator
+```
 
 ## Usage
 
-### Non-streaming request
+### Quick Start
+
+The easiest way to get started:
 
 ```bash
-curl -X POST http://localhost:8080/v1/chat/completions \
+./start.sh
+```
+
+This script will:
+- Create a virtual environment
+- Install dependencies
+- Start the simulator on localhost:8000
+
+### Starting the Server
+
+Run the simulator with default settings (localhost:8000):
+
+```bash
+python simulator.py
+```
+
+Custom host and port:
+
+```bash
+python simulator.py --host 0.0.0.0 --port 8080
+```
+
+With auto-reload for development:
+
+```bash
+python simulator.py --reload
+```
+
+### Available Endpoints
+
+- `GET /` - API information
+- `GET /health` - Health check
+- `GET /v1/models` - List available models
+- `POST /v1/chat/completions` - Create chat completion
+
+### Example Requests
+
+#### Non-streaming Chat Completion
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello"}]
+    "model": "gpt-3.5-turbo",
+    "messages": [
+      {"role": "user", "content": "Hello, how are you?"}
+    ]
   }'
 ```
 
-### Streaming request
+#### Streaming Chat Completion
 
 ```bash
-curl -X POST http://localhost:8080/v1/chat/completions \
+curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello"}],
+    "model": "gpt-3.5-turbo",
+    "messages": [
+      {"role": "user", "content": "Tell me a story"}
+    ],
     "stream": true
   }'
 ```
 
-### List models
+#### List Available Models
 
 ```bash
-curl http://localhost:8080/v1/models
+curl http://localhost:8000/v1/models
 ```
 
-### Health check
+#### Health Check
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8000/health
 ```
+
+### Using with OpenAI Client Libraries
+
+The simulator is compatible with OpenAI client libraries. Just point the base URL to your simulator instance:
+
+#### Python Example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="dummy-key",  # Simulator doesn't validate API keys
+    base_url="http://localhost:8000/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "user", "content": "Hello!"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+#### Streaming Example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="dummy-key",
+    base_url="http://localhost:8000/v1"
+)
+
+stream = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": "Count to 10"}],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
+```
+
+## Supported Models
+
+The simulator supports the following model identifiers:
+
+- `gpt-3.5-turbo`
+- `gpt-4`
+- `gpt-4-turbo`
+- `gpt-4o`
+- `gpt-4o-mini`
+
+## Use Cases
+
+### AI Gateway Testing
+
+Use this simulator to test your AI gateway without incurring costs from actual LLM providers:
+
+1. **Routing Logic**: Verify request routing to different backends
+2. **Authentication**: Test API key validation and authorization
+3. **Rate Limiting**: Validate rate limiting and throttling mechanisms
+4. **Load Balancing**: Test load distribution across multiple backends
+5. **Caching**: Verify response caching behavior
+6. **Monitoring**: Test logging, metrics, and tracing integration
+
+### Development and CI/CD
+
+- Use in development environments without API costs
+- Include in CI/CD pipelines for integration testing
+- Mock LLM responses for testing downstream applications
 
 ## Configuration
 
-All settings are configurable via command-line flags:
+The simulator can be configured via command-line arguments:
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-port` | `8080` | Port to listen on |
-| `-response-delay` | `0` | Artificial delay before responding (e.g. `100ms`, `1s`) |
-| `-stream-chunk-delay` | `50ms` | Delay between SSE stream chunks |
-| `-echo` | `false` | Echo back the last user message |
-| `-response` | `This is a simulated response from the LLM simulator.` | Fixed response text |
-| `-error-rate` | `0` | Probability (0.0–1.0) of returning a simulated error |
-| `-error-status` | `500` | HTTP status code for simulated errors |
-| `-models` | `llm-simulator-1,gpt-4o,gpt-4o-mini` | Comma-separated list of available models |
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--host` | `0.0.0.0` | Host address to bind to |
+| `--port` | `8000` | Port number to listen on |
+| `--reload` | `false` | Enable auto-reload for development |
 
-The port can also be set via the `LLM_SIM_PORT` environment variable.
+## Architecture
 
-### Example: Echo mode with latency
+The simulator is built with:
 
-```bash
-./llm-simulator -echo -response-delay 200ms -stream-chunk-delay 100ms
-```
+- **FastAPI**: Modern, fast web framework for building APIs
+- **Pydantic**: Data validation using Python type annotations
+- **Uvicorn**: ASGI server for running the application
+- **SSE-Starlette**: Server-Sent Events support for streaming
 
-### Example: Error injection testing
+## Limitations
 
-```bash
-./llm-simulator -error-rate 0.5 -error-status 503
-```
+This is a minimal simulator designed for testing purposes:
 
-## API Endpoints
+- Responses are simple echo messages, not actual AI-generated content
+- No authentication or authorization (accepts any API key)
+- Token counting is approximate (4 characters ≈ 1 token)
+- No persistent state or history
+- Limited error handling for edge cases
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/v1/models` | List available models |
-| `POST` | `/v1/chat/completions` | Chat completion (streaming and non-streaming) |
+## Contributing
 
-## Running Tests
-
-```bash
-go test ./...
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
