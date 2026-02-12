@@ -55,6 +55,26 @@ docker build -t llm-simulator .
 docker run -p 8000:8000 llm-simulator
 ```
 
+### Publish to GHCR (multi-arch)
+
+This repo includes a `Makefile` target that builds and pushes a multi-architecture image for `linux/amd64` and `linux/arm64` using Docker Buildx.
+
+1. Login to GHCR (use a GitHub token with `write:packages`):
+
+```bash
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+2. Build & push:
+
+```bash
+# Pushes: ghcr.io/your-org/llm-simulator:latest
+make docker-push REGISTRY=ghcr.io/your-org
+
+# Optional: set a tag
+make docker-push REGISTRY=ghcr.io/your-org TAG=v0.1.0
+```
+
 ## Usage
 
 ### Quick Start
